@@ -26,7 +26,10 @@ rule statement {
         | <special> {*}                          #= special
         | <simple> {*}                           #= simple
     ]
-    ')'
+    [
+        | ')'
+        | <panic: 'Parse failure in "statement": missing ")"'>
+    ]
 }
 
 token special {
@@ -35,9 +38,13 @@ token special {
 
 rule if {
     'if'
+    [[
     <cond=term>
     <iftrue=term>
     <iffalse=term>
+    ]
+    | <panic: "Invalid 'if' statement">
+    ]
     {*}
 }
 
