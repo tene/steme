@@ -9,9 +9,10 @@ This is the grammar for Steme written as a sequence of Perl 6 rules.
 grammar Steme::Grammar is PCT::Grammar;
 
 rule TOP {
+    {*}                                          #= begin
     <statement>*
     [ $ || <panic: 'Syntax error'> ]
-    {*}
+    {*}                                          #= end
 }
 
 ##  this <ws> rule treats ; as "comment to eol"
@@ -35,6 +36,7 @@ rule statement {
 token special {
     | <if> {*}                                   #= if
     | <define> {*}                               #= define
+    | <let> {*}                                  #= let
 }
 
 rule if {
@@ -51,13 +53,23 @@ rule if {
 
 rule define {
     'define'
-    [[
     <var=symbol>
     <val=term>
-    ]
-    | <panic: "Invalid 'define' statement">
-    ]
     {*}
+}
+
+rule let {
+    'let'
+    '('
+    [
+        '('
+        <var=symbol>
+        <val=term>
+        ')'
+    ]+
+    ')' {*}                                      #= begin
+    <statement>*
+    {*}                                          #= end
 }
 
 rule simple {

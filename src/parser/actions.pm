@@ -16,12 +16,20 @@ value of the comment is passed as the second argument to the method.
 
 class Steme::Grammar::Actions;
 
-method TOP($/) {
-    my $past := PAST::Block.new( :blocktype('declaration'), :node( $/ ) );
-    for $<statement> {
-        $past.push( $( $_ ) );
+method TOP($/, $key) {
+    our @?BLOCK;
+    my $past;
+    if $key eq 'begin' {
+        $past := PAST::Block.new( :blocktype('declaration'), :node( $/ ) );
+        @?BLOCK.unshift($past);
     }
-    make $past;
+    else {
+        $past := @?BLOCK.shift();
+        for $<statement> {
+            $past.push( $( $_ ) );
+        }
+        make $past;
+    }
 }
 
 
@@ -38,10 +46,43 @@ method if($/) {
 }
 
 method define($/) {
+    our @?BLOCK;
+    my $block;
+    $block := @?BLOCK[0];
     my $var := $( $<var> );
+    $var.scope('lexical');
     $var.isdecl(1);
     my $val := $( $<val> );
+    $block.symbol( $var.name(), :scope('lexical'));
     make PAST::Op.new( $var, $val, :pasttype('bind'), :node( $/ ) );
+}
+
+method let($/, $key) {
+    our @?BLOCK;
+    my $block;
+    if $key eq 'begin' {
+        $block := PAST::Block.new( :blocktype('immediate'), :node($/) );
+        my $init := PAST::Stmts.new();
+        for $<var> {
+            my $var := $( $_ );
+            my $val := $( $<val>.shift() );
+            $var.scope('lexical');
+            $var.isdecl(1);
+            $block.symbol($var.name(), :scope('lexical'));
+            $init.push( PAST::Op.new( $var, $val, :pasttype('bind')));
+        }
+        $block.unshift($init);
+        @?BLOCK.unshift($block);
+    }
+    else {
+        my $stmts := PAST::Stmts.new();
+        for $<statement> {
+            $stmts.push( $( $_ ) );
+        }
+        $block := @?BLOCK.shift();
+        $block.push($stmts);
+        make $block;
+    }
 }
 
 method simple($/) {
@@ -75,7 +116,15 @@ method quote($/) {
 }
 
 method symbol($/) {
-    make PAST::Var.new( :name( ~$<symbol> ), :scope('package') );
+    our @?BLOCK;
+    my $scope := 'package';
+    my $name := ~$<symbol>;
+    for @?BLOCK {
+        if $_.symbol($name) && $scope eq 'package' {
+            $scope := $_.symbol($name)<scope>;
+        }
+    }
+    make PAST::Var.new( :name( $name ), :scope($scope) );
 }
 
 

@@ -33,6 +33,11 @@ object.
     $P1.'language'('Steme')
     $P1.'parsegrammar'('Steme::Grammar')
     $P1.'parseactions'('Steme::Grammar::Actions')
+
+    ##  create a list for holding the stack of nested blocks
+    $P0 = new ['ResizablePMCArray']
+    set_hll_global ['Steme';'Grammar';'Actions'], '@?BLOCK', $P0
+
 .end
 
 =item main(args :slurpy)  :main
