@@ -37,6 +37,7 @@ token special {
     | <if> {*}                                   #= if
     | <define> {*}                               #= define
     | <let> {*}                                  #= let
+    | <lambda> {*}                               #= lambda
 }
 
 rule if {
@@ -69,6 +70,17 @@ rule let {
     ]+
     ')' {*}                                      #= begin
     <statement>*
+    {*}                                          #= end
+}
+
+rule lambda {
+    'lambda'
+    '('
+    [
+        <var=symbol>
+    ]*
+    ')' {*}                                      #= begin
+    <statement>
     {*}                                          #= end
 }
 

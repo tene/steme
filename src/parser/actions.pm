@@ -85,6 +85,31 @@ method let($/, $key) {
     }
 }
 
+method lambda($/, $key) {
+    our @?BLOCK;
+    my $block;
+    if $key eq 'begin' {
+        $block := PAST::Block.new( :blocktype('declaration'), :node($/) );
+        my $init := PAST::Stmts.new();
+        for $<var> {
+            my $var := $( $_ );
+            $var.scope('parameter');
+            $var.isdecl(1);
+            $block.symbol($var.name(), :scope('lexical'));
+            $init.push($var);
+        }
+        $block.unshift($init);
+        @?BLOCK.unshift($block);
+    }
+    else {
+        my $stmts := PAST::Stmts.new();
+        $stmts.push( $( $<statement> ) );
+        $block := @?BLOCK.shift();
+        $block.push($stmts);
+        make $block;
+    }
+}
+
 method simple($/) {
     my $past := PAST::Op.new( $( $<cmd> ), :pasttype('call'), :node( $/ ) );
     for $<term> {
