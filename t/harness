@@ -1,0 +1,12 @@
+#! perl
+
+# $Id$
+
+# pragmata
+use strict;
+use warnings;
+use 5.008;
+
+use Parrot::Test::Harness language => 'Steme',
+                          compiler => 'steme.pbc';
+

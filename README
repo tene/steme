@@ -1,0 +1,5 @@
+Language 'Steme' was created with tools/dev/mk_language_shell.pl, r37246.
+
+See doc/Steme.pod for the documentation, and
+doc/running.pod for the command-line options.
+
