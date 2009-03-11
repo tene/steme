@@ -51,7 +51,8 @@ SOURCES := \
   steme.pir
 
 BUILTINS_PIR := \
-  src/builtins/say.pir
+  src/builtins/say.pir \
+  src/builtins/math.pir
 
 DOCS := README
 
