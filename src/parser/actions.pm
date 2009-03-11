@@ -37,6 +37,13 @@ method if($/) {
     make PAST::Op.new( $( $<cond> ), $( $<iftrue> ), $( $<iffalse> ), :pasttype('if'), :node( $/ ) );
 }
 
+method define($/) {
+    my $var := $( $<var> );
+    $var.isdecl(1);
+    my $val := $( $<val> );
+    make PAST::Op.new( $var, $val, :pasttype('bind'), :node( $/ ) );
+}
+
 method simple($/) {
     my $past := PAST::Op.new( $( $<cmd> ), :pasttype('call'), :node( $/ ) );
     for $<term> {

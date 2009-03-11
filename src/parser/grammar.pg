@@ -34,6 +34,7 @@ rule statement {
 
 token special {
     | <if> {*}                                   #= if
+    | <define> {*}                               #= define
 }
 
 rule if {
@@ -44,6 +45,17 @@ rule if {
     <iffalse=term>
     ]
     | <panic: "Invalid 'if' statement">
+    ]
+    {*}
+}
+
+rule define {
+    'define'
+    [[
+    <var=symbol>
+    <val=term>
+    ]
+    | <panic: "Invalid 'define' statement">
     ]
     {*}
 }
