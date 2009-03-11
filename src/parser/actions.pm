@@ -26,41 +26,12 @@ method TOP($/) {
 
 
 method statement($/) {
-    my $past := PAST::Op.new( :name('say'), :pasttype('call'), :node( $/ ) );
-    for $<expression> {
+    my $past := PAST::Op.new( $( $<cmd> ), :pasttype('call'), :node( $/ ) );
+    for $<term> {
         $past.push( $( $_ ) );
     }
     make $past;
 }
-
-##  expression:
-##    This is one of the more complex transformations, because
-##    our grammar is using the operator precedence parser here.
-##    As each node in the expression tree is reduced by the
-##    parser, it invokes this method with the operator node as
-##    the match object and a $key of 'reduce'.  We then build
-##    a PAST::Op node using the information provided by the
-##    operator node.  (Any traits for the node are held in $<top>.)
-##    Finally, when the entire expression is parsed, this method
-##    is invoked with the expression in $<expr> and a $key of 'end'.
-method expression($/, $key) {
-    if ($key eq 'end') {
-        make $($<expr>);
-    }
-    else {
-        my $past := PAST::Op.new( :name($<type>),
-                                  :pasttype($<top><pasttype>),
-                                  :pirop($<top><pirop>),
-                                  :lvalue($<top><lvalue>),
-                                  :node($/)
-                                );
-        for @($/) {
-            $past.push( $($_) );
-        }
-        make $past;
-    }
-}
-
 
 ##  term:
 ##    Like 'statement' above, the $key has been set to let us know
@@ -82,6 +53,10 @@ method integer($/) {
 
 method quote($/) {
     make PAST::Val.new( :value( $($<string_literal>) ), :node($/) );
+}
+
+method symbol($/) {
+    make PAST::Var.new( :name( ~$<ident> ), :scope('package') );
 }
 
 

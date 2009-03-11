@@ -5,8 +5,28 @@
 # pragmata
 use strict;
 use warnings;
+use Getopt::Long;
 use 5.008;
 
-use Parrot::Test::Harness language => 'Steme',
-                          compiler => 'steme.pbc';
+our %harness_args = (
+    language  => '@lang@',
+    verbosity => 0,
+);
+
+GetOptions(
+        'verbosity=i'       => \$harness_args{verbosity},
+        'bindir=s'          => \my $bindir,
+        # A sensible default is num_cores + 1.
+        # Many people have two cores these days.
+        'jobs:3'            => \$harness_args{jobs},
+);
+
+if ($bindir) {
+    $harness_args{exec} = [$bindir.'/parrot', 'steme.pbc'];
+} else {
+    $harness_args{compiler} = 'steme.pbc';
+}
+
+eval 'use Parrot::Test::Harness %harness_args';
+
 
