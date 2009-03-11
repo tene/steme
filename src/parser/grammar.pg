@@ -14,8 +14,7 @@ rule TOP {
     {*}
 }
 
-##  this <ws> rule treats # as "comment to eol"
-##  you may want to replace it with something appropriate
+##  this <ws> rule treats ; as "comment to eol"
 token ws {
     <!ww>
     [ ';' \N* \n? | \s+ ]*
@@ -23,9 +22,28 @@ token ws {
 
 rule statement {
     '('
-    <cmd=symbol>
-    <term>*
+    [
+        | <special> {*}                          #= special
+        | <simple> {*}                           #= simple
+    ]
     ')'
+}
+
+token special {
+    | <if> {*}                                   #= if
+}
+
+rule if {
+    'if'
+    <cond=term>
+    <iftrue=term>
+    <iffalse=term>
+    {*}
+}
+
+rule simple {
+    <cmd=term>
+    [<term> ]*
     {*}
 }
 

@@ -25,7 +25,19 @@ method TOP($/) {
 }
 
 
-method statement($/) {
+method statement($/, $key) {
+    make $( $/{$key} );
+}
+
+method special($/, $key) {
+    make $( $/{$key} );
+}
+
+method if($/) {
+    make PAST::Op.new( $( $<cond> ), $( $<iftrue> ), $( $<iffalse> ), :pasttype('if'), :node( $/ ) );
+}
+
+method simple($/) {
     my $past := PAST::Op.new( $( $<cmd> ), :pasttype('call'), :node( $/ ) );
     for $<term> {
         $past.push( $( $_ ) );
