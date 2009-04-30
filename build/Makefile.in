@@ -83,10 +83,10 @@ steme$(EXE): steme.pbc
 steme.pbc: Makefile $(PARROT) $(SOURCES) $(BUILTINS_PIR)
 	$(PARROT) $(PARROT_ARGS) -o steme.pbc steme.pir
 
-src/gen_grammar.pir: $(PARROT) $(PERL6GRAMMAR) src/pct/grammar.pg src/pct/grammar-oper.pg
+src/gen_grammar.pir: $(PARROT) $(PERL6GRAMMAR) src/pct/grammar.pg
 	$(PARROT) $(PARROT_ARGS) $(PERL6GRAMMAR) \
 	    --output=src/gen_grammar.pir \
-	    src/pct/grammar.pg src/pct/grammar-oper.pg
+	    src/pct/grammar.pg
 
 src/gen_actions.pir: $(PARROT) $(NQP) $(PCT) src/pct/actions.pm
 	$(PARROT) $(PARROT_ARGS) $(NQP) --output=src/gen_actions.pir \

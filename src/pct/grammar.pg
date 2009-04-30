@@ -18,11 +18,14 @@ rule TOP {
 ##  you may want to replace it with something appropriate
 token ws {
     <!ww>
-    [ '#' \N* \n? | \s+ ]*
+    [ ';' \N* \n? | \s+ ]*
 }
 
 rule statement {
-    'say' <expression> [ ',' <expression> ]* ';'
+    '('
+    <cmd=symbol>
+    <term>*
+    ')'
     {*}
 }
 
@@ -41,7 +44,9 @@ token quote {
 ##  terms
 token term {
     | <value> {*}                                #= value
+    | <symbol> {*}                               #= symbol
 }
 
-rule expression is optable { ... }
-
+token symbol {
+    <ident> {*}
+}
