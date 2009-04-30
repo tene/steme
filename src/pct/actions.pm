@@ -46,7 +46,7 @@ method value($/, $key) {
 }
 
 method symbol($/) {
-    make PAST::Var.new( :name( ~$<ident> ), :scope('package') );
+    make PAST::Var.new( :name( ~$<symbol> ), :scope('package') );
 }
 
 

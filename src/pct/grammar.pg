@@ -45,8 +45,9 @@ token quote {
 token term {
     | <value> {*}                                #= value
     | <symbol> {*}                               #= symbol
+    | <statement> {*}                            #= statement
 }
 
 token symbol {
-    <ident> {*}
+    $<symbol>=[<!before <[()]>> \S]+ {*}
 }
