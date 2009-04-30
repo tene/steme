@@ -17,7 +17,11 @@ value of the comment is passed as the second argument to the method.
 class Steme::Grammar::Actions;
 
 method TOP($/) {
-    my $past := PAST::Block.new( :blocktype('declaration'), :node( $/ ), :hll('Steme') );
+    my $past := PAST::Block.new(
+        :blocktype('declaration'),
+        :node( $/ ),
+        :hll('Steme'),
+    );
     for $<statement> {
         $past.push( $_.ast );
     }
@@ -25,8 +29,30 @@ method TOP($/) {
 }
 
 
-method statement($/) {
-    my $past := PAST::Op.new( $<cmd>.ast, :pasttype('call'), :node( $/ ) );
+method statement($/, $key) {
+    make $/{$key}.ast
+}
+
+method special($/, $key) {
+    make $/{$key}.ast
+}
+
+method if($/) {
+    make PAST::Op.new(
+        $<cond>.ast,
+        $<iftrue>.ast,
+        $<iffalse>.ast,
+        :pasttype('if'),
+        :node($/),
+    );
+}
+
+method simple($/) {
+    my $past := PAST::Op.new(
+        $<cmd>.ast,
+        :pasttype('call'),
+        :node( $/ ),
+    );
     for $<term> {
         $past.push( $_.ast );
     }
@@ -46,17 +72,28 @@ method value($/, $key) {
 }
 
 method symbol($/) {
-    make PAST::Var.new( :name( ~$<symbol> ), :scope('package') );
+    make PAST::Var.new(
+        :name( ~$<symbol> ),
+        :scope('package'),
+        :node( $/ ),
+    );
 }
 
 
 method integer($/) {
-    make PAST::Val.new( :value( ~$/ ), :returns('Integer'), :node($/) );
+    make PAST::Val.new(
+        :value( ~$/ ),
+        :returns('Integer'),
+        :node($/),
+    );
 }
 
 
 method quote($/) {
-    make PAST::Val.new( :value( $<string_literal>.ast ), :node($/) );
+    make PAST::Val.new(
+        :value( $<string_literal>.ast ),
+        :node($/),
+    );
 }
 
 
