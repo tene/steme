@@ -47,6 +47,13 @@ method if($/) {
     );
 }
 
+method define($/) {
+    my $var := $<var>.ast;
+    $var.isdecl(1);
+    my $val := $<val>.ast;
+    make PAST::Op.new( $var, $val, :pasttype('bind'), :node($/) );
+}
+
 method simple($/) {
     my $past := PAST::Op.new(
         $<cmd>.ast,
