@@ -1,0 +1,5 @@
+(say '1..3')
+(let ((a 1)(b 2))
+    (say 'ok ' a)
+    (say 'ok ' b)
+    (say 'ok ' (+ a b)))
