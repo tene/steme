@@ -18,14 +18,18 @@ class Steme::Grammar::Actions;
 
 method TOP($/, $key) {
     our @?BLOCK;
+    our @?LIBRARY;
     my $past;
     if $key eq 'begin' {
+        my @empty;
         $past:= PAST::Block.new(
             :blocktype('declaration'),
             :node( $/ ),
             :hll('Steme'),
+            :namespace(@empty),
         );
         @?BLOCK.unshift($past);
+        @?LIBRARY.unshift($past);
     }
     else {
         $past := @?BLOCK.shift();
@@ -33,6 +37,7 @@ method TOP($/, $key) {
             $past.push( $_.ast );
         }
         make $past;
+        @?LIBRARY.shift();
     }
 }
 
@@ -57,12 +62,15 @@ method if($/) {
 
 method define($/) {
     our @?BLOCK;
-    my $block := @?BLOCK[0];
+    our @?LIBRARY;
+    my $lib := @?LIBRARY[0];
+    my @ns := $lib.namespace();
     my $var := $<var>.ast;
-    $var.scope('lexical');
-    $var.isdecl(1);
+    $var.scope('package');
+    $var.namespace(@ns);
+    #$var.isdecl(1);
     my $val := $<val>.ast;
-    $block.symbol( $var.name, :scope('lexical') );
+    $lib.symbol( $var.name, :scope('package') );
     make PAST::Op.new( $var, $val, :pasttype('bind'), :node($/) );
 }
 
@@ -118,6 +126,28 @@ method lambda($/, $key) {
         $block := @?BLOCK.shift();
         $block.push($stmts);
         make $block;
+    }
+}
+
+method library($/, $key) {
+    our @?BLOCK;
+    our @?LIBRARY;
+    my $block;
+    my @ns := $<ns>;
+    if $key eq 'begin' {
+        $block := PAST::Block.new( :blocktype('declaration'), :pirflags(':load'), :namespace(@ns), :node($/) );
+        @?BLOCK.unshift($block);
+        @?LIBRARY.unshift(@ns);
+    }
+    else {
+        my $stmts := PAST::Stmts.new();
+        for $<statement> {
+            $stmts.push( $_.ast );
+        }
+        $block := @?BLOCK.shift();
+        $block.push($stmts);
+        make $block;
+        @?LIBRARY.shift();
     }
 }
 

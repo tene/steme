@@ -51,6 +51,8 @@ object.
     ## Create a list for holding the stack of nested blocks
     $P0 = new 'ResizablePMCArray'
     set_hll_global ['Steme';'Grammar';'Actions'], '@?BLOCK', $P0
+    $P0 = new 'ResizablePMCArray'
+    set_hll_global ['Steme';'Grammar';'Actions'], '@?LIBRARY', $P0
 .end
 
 =item main(args :slurpy)  :main

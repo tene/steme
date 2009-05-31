@@ -35,6 +35,7 @@ token special {
     | <define> {*}                               #= define
     | <let> {*}                                  #= let
     | <lambda> {*}                               #= lambda
+    | <library> {*}                              #= library
 }
 
 rule if {
@@ -71,7 +72,16 @@ rule lambda {
     '('
     [
         <var=symbol>
-    ]+
+    ]*
+    ')' {*}                                      #= begin
+    <statement>+
+    {*}                                          #= end
+}
+
+rule library {
+    'library'
+    '('
+    [<ns=ident> ]+
     ')' {*}                                      #= begin
     <statement>+
     {*}                                          #= end
@@ -103,5 +113,9 @@ token term {
 }
 
 token symbol {
-    $<symbol>=[<!before <[()]>> \S]+ {*}
+    <symbol=ident> {*}
+}
+
+token ident {
+    [<!before <[()]>> \S]+
 }
