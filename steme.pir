@@ -23,7 +23,7 @@ object.
 
 .HLL 'steme'
 
-.namespace [ 'Steme';'Compiler' ]
+.namespace []
 
 .loadlib 'steme_group'
 
@@ -39,14 +39,16 @@ object.
 .include 'src/gen_grammar.pir'
 .include 'src/gen_actions.pir'
 
+.namespace [ 'Steme';'Compiler' ]
 .sub 'onload' :anon :load :init
-    $P0 = get_hll_global ['PCT'], 'HLLCompiler'
-    $P1 = $P0.'new'()
-    $P1.'language'('steme')
+    .local pmc steme
+    $P0 = get_root_global ['parrot'], 'P6metaclass'
+    steme = $P0.'new_class'('Steme::Compiler', 'parent'=>'PCT::HLLCompiler')
+    steme.'language'('steme')
     $P0 = get_hll_namespace ['Steme';'Grammar']
-    $P1.'parsegrammar'($P0)
+    steme.'parsegrammar'($P0)
     $P0 = get_hll_namespace ['Steme';'Grammar';'Actions']
-    $P1.'parseactions'($P0)
+    steme.'parseactions'($P0)
 
     ## Create a list for holding the stack of nested blocks
     $P0 = new 'ResizablePMCArray'
@@ -69,6 +71,37 @@ to the Steme compiler.
     $P1 = $P0.'command_line'(args)
 .end
 
+.sub 'load_library' :method
+    .param pmc ns
+    .param pmc extra :named :slurpy
+    .local pmc sourcens, ex, library
+    .local string file, lang
+    file = join '/', ns
+    file = concat file, '.scm'
+    # TODO We need a registry to prevent re-loading
+    # TODO We need a search path
+    self.'evalfiles'(file, 'encoding'=>'utf8', 'transcode'=>'ascii iso-8859-1')
+
+    library = root_new ['parrot';'Hash']
+    sourcens = get_hll_namespace ns
+    library['name'] = ns
+    library['namespace'] = sourcens
+    $P0 = root_new ['parrot';'Hash']
+    $P0['ALL'] = sourcens
+    ex = sourcens['@EXPORTS']
+    if null ex goto no_ex
+    $P1 = root_new ['parrot';'NameSpace']
+    sourcens.'export_to'($P1, ex)
+    $P0['DEFAULT'] = $P1
+    goto have_ex
+  no_ex:
+    $P0['DEFAULT'] = sourcens
+  have_ex:
+    library['symbols'] = $P0
+    .return (library)
+.end
+
+.namespace []
 .include 'src/gen_builtins.pir'
 
 =back
