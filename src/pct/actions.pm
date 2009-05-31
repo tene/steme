@@ -135,9 +135,9 @@ method library($/, $key) {
     my $block;
     my @ns := $<ns>;
     if $key eq 'begin' {
-        $block := PAST::Block.new( :blocktype('declaration'), :pirflags(':load'), :namespace(@ns), :node($/) );
+        $block := PAST::Block.new( :blocktype('immediate'), :namespace(@ns), :node($/) );
         @?BLOCK.unshift($block);
-        @?LIBRARY.unshift(@ns);
+        @?LIBRARY.unshift($block);
     }
     else {
         my $stmts := PAST::Stmts.new();
@@ -151,12 +151,46 @@ method library($/, $key) {
     }
 }
 
-method simple($/) {
+method export($/) {
     my $past := PAST::Op.new(
-        $<cmd>.ast,
+        :pasttype('call'),
+        :name('export'),
+        :node( $/ ),
+        PAST::Val.new(:value(~$<sym>), :returns('String')),
+    );
+    make $past;
+}
+
+method import($/) {
+    my $past := PAST::Stmts.new();
+    for $<libs> {
+        my $ns := $_;
+        my $import := PAST::Op.new(
+            :pasttype('call'),
+            :name('import'),
+            :node( $/ ),
+        );
+        for $_<ns> {
+            $import.push(PAST::Val.new(:value(~$_), :returns('String'))),
+        }
+        $past.push($import);
+    }
+    make $past;
+}
+
+method simple($/) {
+    my $cmd := $<cmd>.ast;
+    my $past := PAST::Op.new(
         :pasttype('call'),
         :node( $/ ),
     );
+    if ~$cmd.WHAT() eq 'PAST::Var()' && $cmd.scope() eq 'package' {
+        $cmd := $cmd.name();
+        $past.name($cmd);
+    }
+    else {
+        $past.push($cmd);
+    }
     for $<term> {
         $past.push( $_.ast );
     }

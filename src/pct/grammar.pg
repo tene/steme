@@ -36,6 +36,8 @@ token special {
     | <let> {*}                                  #= let
     | <lambda> {*}                               #= lambda
     | <library> {*}                              #= library
+    | <export> {*}                               #= export
+    | <import> {*}                               #= import
 }
 
 rule if {
@@ -85,6 +87,20 @@ rule library {
     ')' {*}                                      #= begin
     <statement>+
     {*}                                          #= end
+}
+
+rule export {
+    'export'
+    <sym=ident>
+    {*}
+}
+
+rule import {
+    'import'
+    $<libs>=('('
+    [<ns=ident> ]+
+    ')' )+
+    {*}
 }
 
 rule simple {
