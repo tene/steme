@@ -178,6 +178,24 @@ method import($/) {
     make $past;
 }
 
+method hllimport($/) {
+    my $past := PAST::Stmts.new();
+    for $<libs> {
+        my $ns := $_;
+        my $import := PAST::Op.new(
+            :pasttype('call'),
+            :name('import'),
+            :node( $/ ),
+        );
+        for $_<ns> {
+            $import.push(PAST::Val.new(:value(~$_), :returns('String'))),
+        }
+        $import.push(PAST::Val.new(:value(~$_<hll>), :returns('String'), :named('hll')));
+        $past.push($import);
+    }
+    make $past;
+}
+
 method simple($/) {
     my $cmd := $<cmd>.ast;
     my $past := PAST::Op.new(

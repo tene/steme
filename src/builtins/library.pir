@@ -24,8 +24,16 @@ library.pir -- library functions
 
 .sub 'import'
     .param pmc ns :slurpy
+    .param pmc hll :named('hll') :optional
+    .param pmc has_hll :opt_flag
     .local pmc compiler, targetns, symbols, nsiter, library
-    compiler = compreg 'steme'
+    .local string lang
+    lang = 'steme'
+    if null hll goto no_hll
+    lang = hll
+    'load_language'(lang)
+  no_hll:
+    compiler = compreg lang
     library = compiler.'load_library'(ns)
 
     $P0 = getinterp
@@ -44,6 +52,13 @@ library.pir -- library functions
 .end
 
 
+.HLL 'parrot'   # work around a parrot bug
+.sub 'load_language'
+    .param string lang
+    load_language lang
+.end
+
+.HLL 'steme'
 # Local Variables:
 #   mode: pir
 #   fill-column: 100

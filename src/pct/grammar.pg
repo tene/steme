@@ -38,6 +38,7 @@ token special {
     | <library> {*}                              #= library
     | <export> {*}                               #= export
     | <import> {*}                               #= import
+    | <hllimport> {*}                            #= hllimport
 }
 
 rule if {
@@ -99,6 +100,14 @@ rule import {
     'import'
     $<libs>=('('
     [<ns=ident> ]+
+    ')' )+
+    {*}
+}
+
+rule hllimport {
+    'hllimport'
+    $<libs>=('('
+    <hll=ident> [<ns=ident> ]+
     ')' )+
     {*}
 }
