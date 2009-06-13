@@ -41,6 +41,7 @@ BUILTINS_PIR = \
   src/builtins/math.pir \
   src/builtins/cmp.pir \
   src/builtins/library.pir \
+  src/builtins/control.pir \
 
 # PMCS        = steme
 # PMC_SOURCES = $(PMC_DIR)/steme.pmc
