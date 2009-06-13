@@ -31,9 +31,12 @@ library.pir -- library functions
     lang = 'steme'
     if null hll goto no_hll
     lang = hll
+    compiler = compreg lang
+    unless null compiler goto have_compiler
     'load_language'(lang)
   no_hll:
     compiler = compreg lang
+  have_compiler:
     library = compiler.'load_library'(ns)
 
     $P0 = getinterp
