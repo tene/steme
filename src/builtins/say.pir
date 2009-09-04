@@ -10,14 +10,14 @@ say.pir -- simple implementation of a say function
 
 .sub 'say'
     .param pmc args            :slurpy
-    .local pmc iter
-    iter = new 'Iterator', args
-  iter_loop:
-    unless iter goto iter_end
-    $P0 = shift iter
+    .local pmc it
+    it = iter args
+  it_loop:
+    unless it goto it_end
+    $P0 = shift it
     print $P0
-    goto iter_loop
-  iter_end:
+    goto it_loop
+  it_end:
     print "\n"
     .return ()
 .end

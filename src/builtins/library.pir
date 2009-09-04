@@ -43,7 +43,7 @@ library.pir -- library functions
     targetns = $P0['namespace';1]
     $P0 = library['symbols']
     symbols = $P0['DEFAULT']
-    nsiter = new 'Iterator', symbols
+    nsiter = iter symbols
   import_loop:
     unless nsiter goto import_loop_end
     $S0 = shift nsiter
