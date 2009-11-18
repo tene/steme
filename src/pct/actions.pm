@@ -164,7 +164,6 @@ method export($/) {
 method import($/) {
     my $past := PAST::Stmts.new();
     for $<libs> {
-        my $ns := $_;
         my $import := PAST::Op.new(
             :pasttype('call'),
             :name('import'),

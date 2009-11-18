@@ -25,7 +25,7 @@ library.pir -- library functions
 .sub 'import'
     .param pmc ns :slurpy
     .param pmc hll :named('hll') :optional
-    .param pmc has_hll :opt_flag
+    .param int has_hll :opt_flag
     .local pmc compiler, targetns, symbols, nsiter, library
     .local string lang
     lang = 'steme'
