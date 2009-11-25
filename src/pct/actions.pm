@@ -2,7 +2,7 @@
 
 =begin comments
 
-Steme::Grammar::Actions - ast transformations for Steme
+Steme::Grammar::Actions - ast transspecialations for Steme
 
 This file contains the methods that are used by the parse grammar
 to build the PAST representation of an Steme program.
@@ -14,43 +14,49 @@ value of the comment is passed as the second argument to the method.
 
 =end comments
 
-class Steme::Grammar::Actions;
+class Steme::Grammar::Actions is HLL::Actions;
 
-method TOP($/, $key) {
-    our @?BLOCK;
-    our @?LIBRARY;
-    my $past;
-    if $key eq 'begin' {
-        my @empty;
-        $past:= PAST::Block.new(
-            :blocktype('declaration'),
-            :node( $/ ),
-            :hll('Steme'),
-            :namespace(@empty),
-        );
-        @?BLOCK.unshift($past);
-        @?LIBRARY.unshift($past);
+our @BLOCK;
+our @PACKAGE;
+
+INIT {
+    our @BLOCK := Q:PIR { %r = new ['ResizablePMCArray'] };
+    our @LIBRARY := Q:PIR { %r = new ['ResizablePMCArray'] };
+    my $past := PAST::Block.new(
+        :blocktype('declaration'),
+        :hll('Steme'),
+        :namespace([]),
+    );
+    @BLOCK.unshift($past);
+    @LIBRARY.unshift($past);
+}
+
+method TOP($/) {
+    our @BLOCK;
+    our @LIBRARY;
+    my $past := @BLOCK.shift();
+    for $<statement> {
+        $past.push( $_.ast );
+    }
+    make $past;
+    @LIBRARY.shift();
+}
+
+
+method statement($/) {
+    make $<form>.ast
+}
+
+method form($/) {
+    if $<special> {
+        make $<special>.ast;
     }
     else {
-        $past := @?BLOCK.shift();
-        for $<statement> {
-            $past.push( $_.ast );
-        }
-        make $past;
-        @?LIBRARY.shift();
+        make $<simple>.ast;
     }
 }
 
-
-method statement($/, $key) {
-    make $/{$key}.ast
-}
-
-method special($/, $key) {
-    make $/{$key}.ast
-}
-
-method if($/) {
+method special:sym<if>($/) {
     make PAST::Op.new(
         $<cond>.ast,
         $<iftrue>.ast,
@@ -60,10 +66,10 @@ method if($/) {
     );
 }
 
-method define($/) {
-    our @?BLOCK;
-    our @?LIBRARY;
-    my $lib := @?LIBRARY[0];
+method special:sym<define>($/) {
+    our @BLOCK;
+    our @LIBRARY;
+    my $lib := @LIBRARY[0];
     my @ns := $lib.namespace();
     my $var := $<var>.ast;
     $var.scope('package');
@@ -74,8 +80,8 @@ method define($/) {
     make PAST::Op.new( $var, $val, :pasttype('bind'), :node($/) );
 }
 
-method let($/, $key) {
-    our @?BLOCK;
+method special:sym<let>($/, $key?) {
+    our @BLOCK;
     my $block;
     if $key eq 'begin' {
         $block := PAST::Block.new( :blocktype('immediate'), :node($/) );
@@ -89,21 +95,21 @@ method let($/, $key) {
             $init.push( PAST::Op.new( $var, $val, :pasttype('bind')));
         }
         $block.unshift($init);
-        @?BLOCK.unshift($block);
+        @BLOCK.unshift($block);
     }
     else {
         my $stmts := PAST::Stmts.new();
         for $<statement> {
             $stmts.push( $_.ast );
         }
-        $block := @?BLOCK.shift();
+        $block := @BLOCK.shift();
         $block.push($stmts);
         make $block;
     }
 }
 
-method lambda($/, $key) {
-    our @?BLOCK;
+method special:sym<lambda>($/, $key?) {
+    our @BLOCK;
     my $block;
     if $key eq 'begin' {
         $block := PAST::Block.new( :blocktype('declaration'), :node($/) );
@@ -116,52 +122,52 @@ method lambda($/, $key) {
             $init.push($var);
         }
         $block.unshift($init);
-        @?BLOCK.unshift($block);
+        @BLOCK.unshift($block);
     }
     else {
         my $stmts := PAST::Stmts.new();
         for $<statement> {
             $stmts.push( $_.ast );
         }
-        $block := @?BLOCK.shift();
+        $block := @BLOCK.shift();
         $block.push($stmts);
         make $block;
     }
 }
 
-method library($/, $key) {
-    our @?BLOCK;
-    our @?LIBRARY;
+method special:sym<library>($/, $key?) {
+    our @BLOCK;
+    our @LIBRARY;
     my $block;
     my @ns := $<ns>;
     if $key eq 'begin' {
         $block := PAST::Block.new( :blocktype('immediate'), :namespace(@ns), :node($/) );
-        @?BLOCK.unshift($block);
-        @?LIBRARY.unshift($block);
+        @BLOCK.unshift($block);
+        @LIBRARY.unshift($block);
     }
     else {
         my $stmts := PAST::Stmts.new();
         for $<statement> {
             $stmts.push( $_.ast );
         }
-        $block := @?BLOCK.shift();
+        $block := @BLOCK.shift();
         $block.push($stmts);
         make $block;
-        @?LIBRARY.shift();
+        @LIBRARY.shift();
     }
 }
 
-method export($/) {
+method special:sym<export>($/) {
     my $past := PAST::Op.new(
         :pasttype('call'),
         :name('export'),
         :node( $/ ),
-        PAST::Val.new(:value(~$<sym>), :returns('String')),
+        PAST::Val.new(:value(~$<ident>), :returns('String')),
     );
     make $past;
 }
 
-method import($/) {
+method special:sym<import>($/) {
     my $past := PAST::Stmts.new();
     for $<libs> {
         my $import := PAST::Op.new(
@@ -177,7 +183,7 @@ method import($/) {
     make $past;
 }
 
-method hllimport($/) {
+method special:sym<hllimport>($/) {
     my $past := PAST::Stmts.new();
     for $<libs> {
         my $ns := $_;
@@ -208,29 +214,23 @@ method simple($/) {
     else {
         $past.push($cmd);
     }
-    for $<term> {
+    for $<item> {
         $past.push( $_.ast );
     }
     make $past;
 }
 
-##  term:
-##    Like 'statement' above, the $key has been set to let us know
-##    which term subrule was matched.
-method term($/, $key) {
-    make $/{$key}.ast;
-}
-
-
-method value($/, $key) {
-    make $/{$key}.ast;
-}
+##  item:
+method item:sym<symbol>($/) { make $<symbol>.ast; }
+method item:sym<statement>($/) { make $<statement>.ast; }
+method item:sym<integer>($/) { make $<integer>.ast; }
+method item:sym<quote>($/) { make $<quote>.ast; }
 
 method symbol($/) {
-    our @?BLOCK;
+    our @BLOCK;
     my $scope := 'package';
     my $name := ~$<symbol>;
-    for @?BLOCK {
+    for @BLOCK {
         if $_.symbol($name) && $scope eq 'package' {
             $scope := $_.symbol($name)<scope>;
         }
@@ -252,11 +252,13 @@ method integer($/) {
 }
 
 
-method quote($/) {
-    make PAST::Val.new(
-        :value( $<string_literal>.ast ),
-        :node($/),
-    );
+method quote:sym<apos>($/) {
+    make $<quote_EXPR>.ast;
+}
+
+method quote:sym<dblq>($/) {
+    my $past := $<quote_EXPR>.ast;
+    make $past;
 }
 
 

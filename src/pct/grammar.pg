@@ -6,13 +6,11 @@ This is the grammar for Steme written as a sequence of Perl 6 rules.
 
 =end overview
 
-grammar Steme::Grammar is PCT::Grammar;
+grammar Steme::Grammar is HLL::Grammar;
 
 rule TOP {
-    {*}                                          #= begin
     <statement>*
     [ $ || <panic: 'Syntax error'> ]
-    {*}                                          #= end
 }
 
 ##  this <ws> rule treats # as "comment to eol"
@@ -22,125 +20,104 @@ token ws {
 }
 
 rule statement {
-    '('
-    [
-        | <special> {*}                          #= special
-        | <simple> {*}                           #= simple
-    ]
-    ')'
+    '(' ~ ')' <form>
 }
 
-token special {
-    | <if> {*}                                   #= if
-    | <define> {*}                               #= define
-    | <let> {*}                                  #= let
-    | <lambda> {*}                               #= lambda
-    | <library> {*}                              #= library
-    | <export> {*}                               #= export
-    | <import> {*}                               #= import
-    | <hllimport> {*}                            #= hllimport
+token form {
+    | <special>
+    | <simple>
 }
 
-rule if {
-    'if'
-    <cond=term>
-    <iftrue=term>
-    <iffalse=term>
-    {*}
+proto token special { <...> }
+
+rule special:sym<if> {
+    <sym>
+    <cond=item>
+    <iftrue=item>
+    <iffalse=item>
 }
 
-rule define {
-    'define'
+rule special:sym<define> {
+    <sym>
     <var=symbol>
-    <val=term>
-    {*}
+    <val=item>
 }
 
-rule let {
-    'let'
+rule special:sym<let> {
+    <sym>
     '('
     [
         '('
         <var=symbol>
-        <val=term>
+        <val=item>
         ')'
     ]+
     ')' {*}                                      #= begin
     <statement>+
-    {*}                                          #= end
 }
 
-rule lambda {
-    'lambda'
+rule special:sym<lambda> {
+    <sym>
     '('
     [
         <var=symbol>
     ]*
     ')' {*}                                      #= begin
     <statement>+
-    {*}                                          #= end
 }
 
-rule library {
-    'library'
+rule special:sym<library> {
+    <sym>
     '('
     [<ns=ident> ]+
     ')' {*}                                      #= begin
     <statement>+
-    {*}                                          #= end
 }
 
-rule export {
-    'export'
-    <sym=ident>
+rule special:sym<export> {
+    <sym>
+    <ident>
     {*}
 }
 
-rule import {
-    'import'
+rule special:sym<import> {
+    <sym>
     $<libs>=('('
     [<ns=ident> ]+
     ')' )+
-    {*}
 }
 
-rule hllimport {
-    'hllimport'
+rule special:sym<hllimport> {
+    <sym>
     $<libs>=('('
     <hll=ident> [<ns=ident> ]+
     ')' )+
-    {*}
 }
 
 rule simple {
-    <cmd=term>
-    [<term> ]*
-    {*}
+    <cmd=.item>
+    [<item> ]*
 }
 
-rule value {
-    | <integer> {*}                              #= integer
-    | <quote> {*}                                #= quote
-}
+proto token value { <...> }
+
 
 token integer { \d+ {*} }
 
-token quote {
-    [ \' <string_literal: '\'' > \' | \" <string_literal: '"' > \" ]
-    {*}
-}
+proto token quote { <...> }
+token quote:sym<apos> { <?[']>            <quote_EXPR: ':q'>  }
+token quote:sym<dblq> { <?["]>            <quote_EXPR: ':qq'> }
 
-##  terms
-token term {
-    | <value> {*}                                #= value
-    | <symbol> {*}                               #= symbol
-    | <statement> {*}                            #= statement
-}
+proto token item { <...> }
+token item:sym<integer> { <integer> }
+token item:sym<quote>   { <quote> }
+token item:sym<symbol> { <symbol> }
+token item:sym<statement> { <statement> }
 
 token symbol {
     <symbol=ident> {*}
 }
 
 token ident {
-    [<!before <[()]>> \S]+
+    [<!before <[()'"]> | <digit> > \S]+
 }

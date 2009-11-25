@@ -16,7 +16,7 @@ and registers the compiler under the name 'Steme'.
 
 =item onload()
 
-Creates the Steme compiler using a C<PCT::HLLCompiler>
+Creates the Steme compiler using a C<HLL::Compiler>
 object.
 
 =cut
@@ -29,11 +29,26 @@ object.
 
 .sub '' :anon :load :init
     load_bytecode 'PCT.pbc'
+    load_bytecode 'P6Regex.pbc'
     .local pmc parrotns, hllns, exports
     parrotns = get_root_namespace ['parrot']
     hllns = get_hll_namespace
-    exports = split ' ', 'PAST PCT PGE'
+    exports = split ' ', 'PAST PCT HLL'
     parrotns.'export_to'(hllns, exports)
+    .local pmc regexns
+    regexns = hllns.'make_namespace'('Regex')
+    $P0 = get_root_namespace ['parrot';'Regex';'Cursor']
+    regexns.'add_namespace'('Cursor', $P0)
+    $P0 = get_root_global ['parrot';'Regex'], 'Cursor'
+    regexns['Cursor'] = $P0
+    $P0 = get_root_namespace ['parrot';'Regex';'Match']
+    regexns.'add_namespace'('Match', $P0)
+    $P0 = get_root_global ['parrot';'Regex'], 'Match'
+    regexns['Match'] = $P0
+    $P0 = get_root_namespace ['parrot';'Regex';'P6Regex']
+    regexns.'add_namespace'('P6Regex', $P0)
+    $P0 = get_root_global ['parrot';'Regex'], 'P6Regex'
+    regexns['P6Regex'] = $P0
 .end
 
 .include 'src/gen_grammar.pir'
@@ -43,18 +58,12 @@ object.
 .sub 'onload' :anon :load :init
     .local pmc steme
     $P0 = get_root_global ['parrot'], 'P6metaclass'
-    steme = $P0.'new_class'('Steme::Compiler', 'parent'=>'PCT::HLLCompiler')
+    steme = $P0.'new_class'('Steme::Compiler', 'parent'=>'HLL::Compiler')
     steme.'language'('steme')
-    $P0 = get_hll_namespace ['Steme';'Grammar']
+    $P0 = get_hll_global ['Steme'], 'Grammar'
     steme.'parsegrammar'($P0)
-    $P0 = get_hll_namespace ['Steme';'Grammar';'Actions']
+    $P0 = get_hll_global ['Steme';'Grammar'], 'Actions'
     steme.'parseactions'($P0)
-
-    ## Create a list for holding the stack of nested blocks
-    $P0 = new 'ResizablePMCArray'
-    set_hll_global ['Steme';'Grammar';'Actions'], '@?BLOCK', $P0
-    $P0 = new 'ResizablePMCArray'
-    set_hll_global ['Steme';'Grammar';'Actions'], '@?LIBRARY', $P0
 .end
 
 =item main(args :slurpy)  :main
