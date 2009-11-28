@@ -1,2 +1,5 @@
 Language 'Steme' was created with tools/dev/create_language.pl, $Revision$.
 
+  $ parrot setup.pir
+  $ parrot setup.pir test
+
