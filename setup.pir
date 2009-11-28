@@ -34,8 +34,8 @@ No Configure step, no Makefile generated.
     $P0['description'] = 'Scheme for Parrot'
     $P1 = split ';', 'scheme;lisp'
     $P0['keywords'] = $P1
-#    $P0['license_type'] = ''
-#    $P0['license_uri'] = ''
+    $P0['license_type'] = 'MIT/X11'
+    $P0['license_uri'] = 'http://www.opensource.org/licenses/mit-license.php'
     $P0['copyright_holder'] = 'Stephen Weeks'
     $P0['checkout_uri'] = 'git://github.com/tene/steme.git'
     $P0['browser_uri'] = 'http://github.com/tene/steme'
