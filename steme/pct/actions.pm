@@ -56,6 +56,28 @@ method form($/) {
     }
 }
 
+method special:sym<macro>($/) {
+    my $name := 'special:sym<' ~ $<symbol> ~ '>';
+    my $regex := 'rule ' ~ $name ~ ' { ' ~ $<pattern>.ast.value ~ '}';
+    my $action := 'method ' ~ $name ~ '($/) { ' ~ $<action>.ast.value ~ '}';
+    pir::load_bytecode('nqp-rx.pbc');
+    my $c := pir::compreg__ps('NQP-rx');
+    (Q:PIR { %r = get_class ['Steme';'Grammar'] }).add_method($name, $c.compile($regex)[1]);
+    (Q:PIR { %r = get_class ['Steme';'Grammar';'Actions'] }).add_method($name, $c.compile($action)[1]);
+    $/.CURSOR().'!protoregex_generation'();
+    make PAST::Stmts.new();
+}
+
+method special:sym<export>($/) {
+    my $past := PAST::Op.new(
+        :pasttype('call'),
+        :name('export'),
+        :node( $/ ),
+        PAST::Val.new(:value(~$<ident>), :returns('String')),
+    );
+    make $past;
+}
+
 method special:sym<if>($/) {
     make PAST::Op.new(
         $<cond>.ast,
@@ -155,16 +177,6 @@ method special:sym<library>($/, $key?) {
         make $block;
         @LIBRARY.shift();
     }
-}
-
-method special:sym<export>($/) {
-    my $past := PAST::Op.new(
-        :pasttype('call'),
-        :name('export'),
-        :node( $/ ),
-        PAST::Val.new(:value(~$<ident>), :returns('String')),
-    );
-    make $past;
 }
 
 method special:sym<import>($/) {

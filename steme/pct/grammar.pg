@@ -6,7 +6,7 @@ This is the grammar for Steme written as a sequence of Perl 6 rules.
 
 =end overview
 
-grammar Steme::Grammar is HLL::Grammar;
+grammar Steme::Grammar is HLL::Grammar {
 
 rule TOP {
     <statement>*
@@ -29,6 +29,18 @@ token form {
 }
 
 proto token special { <...> }
+
+rule special:sym<macro> {
+    <sym>
+    <symbol>
+    <pattern=.item>
+    <action=.quote>
+}
+
+rule special:sym<export> {
+    <sym>
+    <ident>
+}
 
 rule special:sym<if> {
     <sym>
@@ -74,12 +86,6 @@ rule special:sym<library> {
     <statement>+
 }
 
-rule special:sym<export> {
-    <sym>
-    <ident>
-    {*}
-}
-
 rule special:sym<import> {
     <sym>
     $<libs>=('('
@@ -102,7 +108,7 @@ rule simple {
 proto token value { <...> }
 
 
-token integer { \d+ {*} }
+token integer { \d+ }
 
 proto token quote { <...> }
 token quote:sym<apos> { <?[']>            <quote_EXPR: ':q'>  }
@@ -115,9 +121,11 @@ token item:sym<symbol> { <symbol> }
 token item:sym<statement> { <statement> }
 
 token symbol {
-    <symbol=ident> {*}
+    <symbol=ident>
 }
 
 token ident {
     [<!before <[()'"]> | <digit> > \S]+
+}
+
 }
