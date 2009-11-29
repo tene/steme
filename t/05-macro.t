@@ -12,3 +12,9 @@
     (is 1 1)
     (is (+ 1 1) 2)
 )
+
+;Expected Output
+;
+; 1..2
+; ok 1 # Got 1 from 1
+; ok 2 # Got 2 from (+ 1 1)
