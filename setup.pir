@@ -71,6 +71,11 @@ SOURCES
     # install
     $P0['inst_lang'] = 'steme/steme.pbc'
 
+    # dist
+    $P10 = glob('steme/builtins/*.pir')
+    $P0['manifest_includes'] = $P10
+    $P0['manifest_excludes'] = 'steme/gen_builtins.pir'
+
     .tailcall setup(args :flat, $P0 :flat :named)
 .end
 
@@ -92,16 +97,14 @@ BUILTINS_PIR
     $S0 .= $S1
     $S0 .= "'\n\n"
     $P0 = new 'FileHandle'
-    $P0.'open'('steme/gen_builtins.pir', 'w')
-    $P0.'puts'($S0)
-    $P0.'close'()
+    spew('steme/gen_builtins.pir', $S0)
     say "creating steme/gen_builtins.pir"
   L1:
 .end
 
 .sub 'clean' :anon
     .param pmc kv :slurpy :named
-    unlink('steme/gen_builtins.pir')
+    unlink('steme/gen_builtins.pir', 1 :named('verbose'))
 .end
 
 
