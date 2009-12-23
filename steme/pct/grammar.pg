@@ -33,7 +33,9 @@ proto token special { <...> }
 rule special:sym<macro> {
     <sym>
     <symbol>
-    <pattern=.item>
+    :my $*MACRONAME;
+    <{ $*MACRONAME := ~ $<symbol>; }>
+    '(' <match> ')'
     <action=.quote>
 }
 
@@ -126,6 +128,17 @@ token symbol {
 
 token ident {
     [<!before <[()'"]> | <digit> > \S]+
+}
+
+rule match {
+    [ <matchitem> <.ws> ]+
+}
+proto token matchitem { <...> }
+token matchitem:sym<sym> { <alnum>+ }
+token matchitem:sym<_> { '_' }
+token matchitem:sym<quote> { "'" $<text>=[<alnum>+] }
+token matchitem:sym<sexp> {
+    '(' <.ws> [ <matchitem> <.ws> ]* ')'
 }
 
 }

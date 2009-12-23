@@ -58,12 +58,17 @@ method form($/) {
 
 method special:sym<macro>($/) {
     my $name := 'special:sym<' ~ $<symbol> ~ '>';
-    my $regex := 'rule ' ~ $name ~ ' { ' ~ $<pattern>.ast.value ~ '}';
+    #my $regex := 'rule ' ~ $name ~ ' { ' ~ $<pattern>.ast.value ~ '}';
     my $action := 'method ' ~ $name ~ '($/) { ' ~ $<action>.ast.value ~ '}';
     pir::load_bytecode('nqp-rx.pbc');
     my $c := pir::compreg__ps('NQP-rx');
-    (Q:PIR { %r = get_class ['Steme';'Grammar'] }).add_method($name, $c.compile($regex)[1]);
     (Q:PIR { %r = get_class ['Steme';'Grammar';'Actions'] }).add_method($name, $c.compile($action)[1]);
+    my $regex := $<match>.ast;
+    $regex.name($name);
+    $c := pir::compreg__PS('PAST');
+    #say($c.compile($regex, :target('pir')));
+    my $x := $c.compile($regex);
+    #(Q:PIR { %r = get_class ['Steme';'Grammar'] }).add_method($name, $c.compile($regex)[0]);
     $/.CURSOR().'!protoregex_generation'();
     make PAST::Stmts.new();
 }
@@ -272,6 +277,84 @@ method quote:sym<dblq>($/) {
     my $past := $<quote_EXPR>.ast;
     make $past;
 }
+
+    method match($/) {
+        my $past := PAST::Block.new(
+            :blocktype('method'),
+            #:name('special:sym<' ~ $*MACRONAME ~ '>'),
+            :namespace(['Steme','Grammar']),
+            :hll('Steme'),
+        );
+        $past.symbol('$/', :scope('lexical'));
+        $past.symbol('$¢', :scope('lexical'));
+        my $r := PAST::Regex.new( :pasttype('concat'));
+        $r.push(PAST::Regex.new(:pasttype('scan')));
+        for $<matchitem> {
+            $r.push( $_.ast );
+            $r.push(PAST::Regex.new(
+                :pasttype('subrule'),
+                :name(''),
+                :subtype('method'),
+                'ws')
+            );
+        }
+        $r.push(PAST::Regex.new(:pasttype('pass')));
+        $past.push($r);
+        make $past;
+    }
+    method matchitem:sym<sym>($/) {
+        my $past := PAST::Regex.new(
+            :pasttype('subrule'),
+            :name(~$/),
+            :subtype('capture'),
+            'item',
+        );
+#        $past.push(
+#            PAST::Regex.new(
+#                :name(''),
+#                :pasttype('subrule'),
+#                :subtype('capture'),
+#                'item',
+#            ),
+#        );
+        make $past;
+    }
+    method matchitem:sym<_>($/) {
+        my $past := PAST::Regex.new(
+                :name(''),
+                :pasttype('literal'),
+                $*MACRONAME,
+            );
+        make $past;
+    }
+    method matchitem:sym<quote>($/) {
+        my $past := PAST::Regex.new(
+            :pasttype('literal'),
+            ~$<text>,
+        );
+        make $past;
+    }
+    method matchitem:sym<sexp>($/) {
+        my $past := PAST::Regex.new(:pasttype('concat'));
+        $past.push(PAST::Regex.new(:pasttype('literal'), '('));
+        $past.push(PAST::Regex.new(
+            :pasttype('subrule'),
+            :name(''),
+            :subtype('method'),
+            'ws')
+        );
+        for $<matchitem> {
+            $past.push( $_.ast );
+            $past.push(PAST::Regex.new(
+                :pasttype('subrule'),
+                :name(''),
+                :subtype('method'),
+                'ws')
+            );
+        }
+        $past.push(PAST::Regex.new(:pasttype('literal'), ')'));
+        make $past;
+    }
 
 
 # Local Variables:

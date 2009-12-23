@@ -2,7 +2,7 @@
 (define num 1)
 (let ((ok (lambda (cond msg) (say (if cond 'ok ' 'nok ') num ' # ' msg)(define num (+ num 1)))))
 (macro is
-    "<sym> <a=.item> <b=.item>"
+    (_ a b)
     "make PAST::Op.new(:pasttype('call'), :name('ok'),
         PAST::Op.new(:pasttype('call'), :name('='),
         $<a>.ast, $<b>.ast),
