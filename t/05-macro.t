@@ -1,4 +1,4 @@
-(say "1..2")
+(say "1..3")
 (define num 1)
 (define debug-enabled 0)
 (macro debug
@@ -8,7 +8,7 @@
 (let ((ok (lambda (cond msg) (say (if cond 'ok ' 'nok ') num ' # ' msg)(define num (+ num 1)))))
     (ok 1 "parsed the macro, and still alive")
     (debug (define called 1))
-    (ok (= called 0) "deferred evaluation")
+    (ok (= called 0) "deferred evaluation avoided")
     (define debug-enabled 1)
     (debug (define called 1))
     (ok (= called 1) "deferred evaluation")
