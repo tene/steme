@@ -18,6 +18,7 @@ class Steme::Grammar::Actions is HLL::Actions;
 
 our @BLOCK;
 our @PACKAGE;
+our %MACROS;
 
 INIT {
     our @BLOCK := Q:PIR { %r = new ['ResizablePMCArray'] };
@@ -29,6 +30,10 @@ INIT {
     );
     @BLOCK.unshift($past);
     @LIBRARY.unshift($past);
+    Q:PIR {
+        $P0 = new ['Hash']
+        set_hll_global '$MACROMATCH', $P0
+    };
 }
 
 method TOP($/) {
@@ -58,19 +63,40 @@ method form($/) {
 
 method special:sym<macro>($/) {
     my $name := 'special:sym<' ~ $<symbol> ~ '>';
-    #my $regex := 'rule ' ~ $name ~ ' { ' ~ $<pattern>.ast.value ~ '}';
-    my $action := 'method ' ~ $name ~ '($/) { ' ~ $<action>.ast.value ~ '}';
-    pir::load_bytecode('nqp-rx.pbc');
-    my $c := pir::compreg__ps('NQP-rx');
-    (Q:PIR { %r = get_class ['Steme';'Grammar';'Actions'] }).add_method($name, $c.compile($action)[1]);
+    %MACROS{~$<symbol>} := ~$<action>;
+    #pir::load_bytecode('nqp-rx.pbc');
+    #my $c := pir::compreg__ps('NQP-rx');
+    my $class := (Q:PIR { %r = get_class ['Steme';'Grammar';'Actions'] });
+    $class.add_method($name, Q:PIR { %r = get_hll_global ['Steme';'Grammar';'Actions'], 'macroeval'});
     my $regex := $<match>.ast;
     $regex.name($name);
-    $c := pir::compreg__PS('PAST');
+    my $c := pir::compreg__PS('PAST');
     #say($c.compile($regex, :target('pir')));
     my $x := $c.compile($regex);
     #(Q:PIR { %r = get_class ['Steme';'Grammar'] }).add_method($name, $c.compile($regex)[0]);
     $/.CURSOR().'!protoregex_generation'();
     make PAST::Stmts.new();
+}
+
+method macroeval($/) {
+    our @BLOCK;
+    our @LIBRARY;
+    my $mn := $<!macroname>;
+    my $body := %MACROS{$mn};
+    my $*MACROMATCH := $/;
+    my $past := PAST::Block.new(
+        :blocktype('immediate'),
+    );
+    @BLOCK.unshift($past);
+    @LIBRARY.unshift($past);
+    my $c := pir::compreg__PS('steme');
+    my $p := $c.compile($body, :target('past'));
+    #say("omgwtf eval a macro");
+    #say("macro: $mn");
+    #pir::load_bytecode('dumper.pir');
+    #(Q:PIR {%r = get_root_global ['parrot'], '_dumper'})($/);
+    #(Q:PIR {%r = get_root_global ['parrot'], '_dumper'})($p);
+    make $p;
 }
 
 method special:sym<export>($/) {
@@ -242,6 +268,13 @@ method item:sym<symbol>($/) { make $<symbol>.ast; }
 method item:sym<statement>($/) { make $<statement>.ast; }
 method item:sym<integer>($/) { make $<integer>.ast; }
 method item:sym<quote>($/) { make $<quote>.ast; }
+method item:sym<macroexpand>($/) {
+    my $past := PAST::Stmts.new();
+    try {
+        $past := $*MACROMATCH{~$<ident>}.ast;
+    }
+    make $past;
+}
 
 method symbol($/) {
     our @BLOCK;
@@ -321,9 +354,12 @@ method quote:sym<dblq>($/) {
     }
     method matchitem:sym<_>($/) {
         my $past := PAST::Regex.new(
-                :name(''),
-                :pasttype('literal'),
-                $*MACRONAME,
+                :name('!macroname'),
+                :pasttype('subcapture'),
+                PAST::Regex.new(
+                    :pasttype('literal'),
+                    $*MACRONAME,
+                ),
             );
         make $past;
     }

@@ -1,20 +1,15 @@
 (say "1..2")
 (define num 1)
+(define debug-enabled 0)
+(macro debug
+    (_ msg)
+    (if debug-enabled `msg 1))
+(define called 0)
 (let ((ok (lambda (cond msg) (say (if cond 'ok ' 'nok ') num ' # ' msg)(define num (+ num 1)))))
-(macro is
-    (_ a b)
-    "make PAST::Op.new(:pasttype('call'), :name('ok'),
-        PAST::Op.new(:pasttype('call'), :name('='),
-        $<a>.ast, $<b>.ast),
-        PAST::Val.new( :returns('String'), :value('Got ' ~ $<b> ~ ' from ' ~ $<a> ))
-    );"
-    )
-    (is 1 1)
-    (is (+ 1 1) 2)
+    (ok 1 "parsed the macro, and still alive")
+    (debug (define called 1))
+    (ok (= called 0) "deferred evaluation")
+    (define debug-enabled 1)
+    (debug (define called 1))
+    (ok (= called 1) "deferred evaluation")
 )
-
-;Expected Output
-;
-; 1..2
-; ok 1 # Got 1 from 1
-; ok 2 # Got 2 from (+ 1 1)

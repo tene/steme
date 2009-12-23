@@ -36,7 +36,7 @@ rule special:sym<macro> {
     :my $*MACRONAME;
     <{ $*MACRONAME := ~ $<symbol>; }>
     '(' <match> ')'
-    <action=.quote>
+    <action=.item(:actions())>
 }
 
 rule special:sym<export> {
@@ -121,13 +121,14 @@ token item:sym<integer> { <integer> }
 token item:sym<quote>   { <quote> }
 token item:sym<symbol> { <symbol> }
 token item:sym<statement> { <statement> }
+token item:sym<macroexpand> { '`' <ident> }
 
 token symbol {
     <symbol=ident>
 }
 
 token ident {
-    [<!before <[()'"]> | <digit> > \S]+
+    [<!before <[()'",`]> | <digit> > \S]+
 }
 
 rule match {
