@@ -299,6 +299,13 @@ method q_item:sym<macroexpand>($/) {
     make PAST::Val.new( :returns('String'), :value(~$/));
 }
 method q_item:sym<unquote>($/) { make $<item>.ast };
+method q_item:sym<q>($/) {
+    make PAST::Op.new(
+        :pirop('concat'),
+        "'",
+        $<q_item>.ast
+    );
+}
 
 method symbol($/) {
     our @BLOCK;

@@ -135,6 +135,7 @@ token q_item:sym<q_symbol> { <ident> }
 token q_item:sym<q_statement> { <q_statement> }
 token q_item:sym<unquote> { ',' <item> }
 token q_item:sym<macroexpand> { ':' <ident> }
+token q_item:sym<q> { <['`]> <q_item> }
 
 
 token symbol {
