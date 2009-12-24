@@ -83,6 +83,7 @@ SOURCES
     .param pmc kv :slurpy :named
 
     $P1 = split "\n", <<'BUILTINS_PIR'
+steme/builtins/std.pir
 steme/builtins/say.pir
 steme/builtins/math.pir
 steme/builtins/cmp.pir
