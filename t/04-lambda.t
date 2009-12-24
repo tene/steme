@@ -1,5 +1,5 @@
-(say '1..4')
-(let ((ok (lambda (msg) (say 'ok ' msg)))
+(say "1..4")
+(let ((ok (lambda (msg) (say "ok " msg)))
       (sum (lambda (a b) (+ a b)))
       (double (lambda (a) (* a 2))))
     (ok 1)

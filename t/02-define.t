@@ -1,5 +1,5 @@
-(say '1..2')
+(say "1..2")
 (define a 1)
 (define b 2)
-(say 'ok ' a)
-(say 'ok ' b)
+(say "ok " a)
+(say "ok " b)
