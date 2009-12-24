@@ -75,6 +75,7 @@ SOURCES
     $P10 = glob('steme/builtins/*.pir')
     $P0['manifest_includes'] = $P10
     $P0['manifest_excludes'] = 'steme/gen_builtins.pir'
+    $P0['doc_files'] = 'README'
 
     .tailcall setup(args :flat, $P0 :flat :named)
 .end
@@ -97,9 +98,7 @@ BUILTINS_PIR
     $S1 = join "'\n.include '", $P1
     $S0 .= $S1
     $S0 .= "'\n\n"
-    $P0 = new 'FileHandle'
-    spew('steme/gen_builtins.pir', $S0)
-    say "creating steme/gen_builtins.pir"
+    spew('steme/gen_builtins.pir', $S0, 1 :named('verbose'))
   L1:
 .end
 
