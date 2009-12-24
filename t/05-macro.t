@@ -3,7 +3,7 @@
 (define debug-enabled 0)
 (macro debug
     (_ msg)
-    (if debug-enabled `msg 1))
+    (if debug-enabled :msg 1))
 (define called 0)
 (let ((ok (lambda (cond msg) (say (if cond 'ok ' 'nok ') num ' # ' msg)(define num (+ num 1)))))
     (ok 1 "parsed the macro, and still alive")

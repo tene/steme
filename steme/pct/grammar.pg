@@ -9,7 +9,7 @@ This is the grammar for Steme written as a sequence of Perl 6 rules.
 grammar Steme::Grammar is HLL::Grammar {
 
 rule TOP {
-    <statement>*
+    <item>*
     [ $ || <panic: 'Syntax error'> ]
 }
 
@@ -36,7 +36,7 @@ rule special:sym<macro> {
     :my $*MACRONAME;
     <{ $*MACRONAME := ~ $<symbol>; }>
     '(' <match> ')'
-    <action=.item(:actions())>
+    <action=.q_item>
 }
 
 rule special:sym<export> {
@@ -107,28 +107,42 @@ rule simple {
     [<item> ]*
 }
 
+rule q_simple {
+    [<q_item> ]*
+}
+
+rule q_statement {
+    '(' ~ ')' <q_simple>
+}
+
 proto token value { <...> }
 
 
 token integer { \d+ }
-
-proto token quote { <...> }
-token quote:sym<apos> { <?[']>            <quote_EXPR: ':q'>  }
-token quote:sym<dblq> { <?["]>            <quote_EXPR: ':qq'> }
 
 proto token item { <...> }
 token item:sym<integer> { <integer> }
 token item:sym<quote>   { <quote> }
 token item:sym<symbol> { <symbol> }
 token item:sym<statement> { <statement> }
-token item:sym<macroexpand> { '`' <ident> }
+token item:sym<macroexpand> { ':' <ident> }
+token item:sym<q> { <['`]> <q_item> }
+
+proto token q_item { <...> }
+token q_item:sym<integer> { <integer> }
+token q_item:sym<quote>   { <quote> }
+token q_item:sym<q_symbol> { <ident> }
+token q_item:sym<q_statement> { <q_statement> }
+token q_item:sym<unquote> { ',' <item> }
+token q_item:sym<macroexpand> { ':' <ident> }
+
 
 token symbol {
     <symbol=ident>
 }
 
 token ident {
-    [<!before <[()'",`]> | <digit> > \S]+
+    [<!before <[()'",`:]> | <digit> > \S]+
 }
 
 rule match {
@@ -141,5 +155,8 @@ token matchitem:sym<quote> { "'" $<text>=[<alnum>+] }
 token matchitem:sym<sexp> {
     '(' <.ws> [ <matchitem> <.ws> ]* ')'
 }
+
+proto token quote { <...> }
+token quote:sym<dblq> { <?["]>            <quote_EXPR: ':qq'> }
 
 }

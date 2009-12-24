@@ -40,7 +40,7 @@ method TOP($/) {
     our @BLOCK;
     our @LIBRARY;
     my $past := @BLOCK.shift();
-    for $<statement> {
+    for $<item> {
         $past.push( $_.ast );
     }
     make $past;
@@ -268,6 +268,7 @@ method item:sym<symbol>($/) { make $<symbol>.ast; }
 method item:sym<statement>($/) { make $<statement>.ast; }
 method item:sym<integer>($/) { make $<integer>.ast; }
 method item:sym<quote>($/) { make $<quote>.ast; }
+method item:sym<q>($/) { make $<q_item>.ast; }
 method item:sym<macroexpand>($/) {
     my $past := PAST::Stmts.new();
     try {
@@ -275,6 +276,29 @@ method item:sym<macroexpand>($/) {
     }
     make $past;
 }
+
+method q_statement($/) { make $<q_simple>.ast; }
+method q_simple($/) {
+    my $past := PAST::Op.new(
+        :pasttype('call'),
+        :name('list'),
+    );
+    for $<q_item> {
+        $past.push($_.ast);
+    }
+    make $past;
+}
+
+method q_item:sym<q_symbol>($/) {
+    make PAST::Val.new( :returns('String'), :value(~$<ident>));
+}
+method q_item:sym<q_statement>($/) { make $<q_statement>.ast; }
+method q_item:sym<integer>($/) { make $<integer>.ast; }
+method q_item:sym<quote>($/) { make $<quote>.ast; }
+method q_item:sym<macroexpand>($/) {
+    make PAST::Val.new( :returns('String'), :value(~$/));
+}
+method q_item:sym<unquote>($/) { make $<item>.ast };
 
 method symbol($/) {
     our @BLOCK;
@@ -302,14 +326,7 @@ method integer($/) {
 }
 
 
-method quote:sym<apos>($/) {
-    make $<quote_EXPR>.ast;
-}
-
-method quote:sym<dblq>($/) {
-    my $past := $<quote_EXPR>.ast;
-    make $past;
-}
+method quote:sym<dblq>($/) { make $<quote_EXPR>.ast; }
 
     method match($/) {
         my $past := PAST::Block.new(
